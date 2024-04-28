@@ -16,7 +16,7 @@ namespace Zadanie5.Controllers
         }
 
         [HttpPost]
-        public ActionResult AddProduct(ProductWarehouse product)
+        public async Task<IActionResult> AddProduct(ProductWarehouse product)
         {
             _warehouseService.AddProduct(product);
             return Ok();
