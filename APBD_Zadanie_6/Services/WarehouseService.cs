@@ -24,9 +24,9 @@ namespace Zadanie5.Services
 
             cmd.CommandText = "SELECT TOP 1 [Order].IdOrder FROM " +
                               "LEFT JOIN Product_Warehouse ON [Order].IdOrder = Product_Warehouse.IdOrder " +
-                              "WHERE [Order],IdProduct = @IdProduct" +
+                              "WHERE [Order].IdProduct = @IdProduct" +
                               "AND [Order].Amount = @Amount" +
-                              "AND Product.Warehouse.IdProductWarehouse IS NULL" +
+                              "AND Product_Warehouse.IdProductWarehouse IS NULL" +
                               "AND [Order].CreatedAt < @CreatedAt";
 
             cmd.Parameters.AddWithValue("IdProduct", productWarehouse.IdProduct);
@@ -48,14 +48,14 @@ namespace Zadanie5.Services
 
             reader = await cmd.ExecuteReaderAsync();
             
-            if (!reader.HasRows) throw new Exception();//customowy dać, że nie ma productu o tym id
+            if (!reader.HasRows) throw new Exception("There is no product with this id");
             await reader.ReadAsync();
             double price = double.Parse(reader["Price"].ToString());
             await reader.CloseAsync();
             
             cmd.Parameters.Clear();
 
-            cmd.CommandText = "SELECT IdWarehouse FROM Waregouse WHERE IdWarehouse = @IdWarehouse";
+            cmd.CommandText = "SELECT IdWarehouse FROM Warehouse WHERE IdWarehouse = @IdWarehouse";
             cmd.Parameters.AddWithValue("IdWarehouse", productWarehouse.IdWarehouse);
             
             reader = await cmd.ExecuteReaderAsync();
@@ -72,7 +72,7 @@ namespace Zadanie5.Services
             {
                 cmd.CommandText = "UPDATE [Order] SET FulfilledAt = @CreatedAt WHERE IdOrder = @IdOrder";
                 cmd.Parameters.AddWithValue("CreatedAt", productWarehouse.CreatedAt);
-                cmd.Parameters.AddWithValue("IdOrder", productWarehouse.IdOrder);
+                cmd.Parameters.AddWithValue("IdOrder", idOrder);
 
                 int rowsUpdated = await cmd.ExecuteNonQueryAsync();
 
@@ -85,7 +85,7 @@ namespace Zadanie5.Services
                     $"VALUES(@IdWarehouse, @IdProduct, @IdOrder, @Amount, @Amount*{price}, @CreatedAt)";
                 cmd.Parameters.AddWithValue("IdWarehouse", productWarehouse.IdWarehouse);
                 cmd.Parameters.AddWithValue("IdProduct", productWarehouse.IdProduct);
-                cmd.Parameters.AddWithValue("IdOrder", productWarehouse.IdOrder);
+                cmd.Parameters.AddWithValue("IdOrder", idOrder);
                 cmd.Parameters.AddWithValue("Amount", productWarehouse.Amount);
                 cmd.Parameters.AddWithValue("CreatedAt", productWarehouse.CreatedAt);
 
@@ -102,7 +102,12 @@ namespace Zadanie5.Services
             
             cmd.Parameters.Clear();
 
-            cmd.CommandText = "SELECT TOP 1 IdProductWarehouse FROM Product_Warehouse ORDER BY IdProductWarehouse";
+            cmd.CommandText = "SELECT TOP 1 IdProductWarehouse FROM Product_Warehouse ORDER BY IdProductWarehouse DESC";
+            
+            reader = await cmd.ExecuteReaderAsync();
+            await reader.ReadAsync();
+            int idProductWarehouse = int.Parse(reader["IdProductWarehouse"].ToString());
+            await reader.CloseAsync();
             
 
             return 1;
